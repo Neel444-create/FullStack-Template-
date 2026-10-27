@@ -49,10 +49,14 @@ function ItemsTableContent({ search }: { search: string }) {
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold">
-          {hasSearch ? "No items match your search" : "You don't have any items yet"}
+          {hasSearch
+            ? "No items match your search"
+            : "You don't have any items yet"}
         </h3>
         <p className="text-muted-foreground">
-          {hasSearch ? "Try a different title or description." : "Add a new item to get started"}
+          {hasSearch
+            ? "Try a different title or description."
+            : "Add a new item to get started"}
         </p>
       </div>
     )
