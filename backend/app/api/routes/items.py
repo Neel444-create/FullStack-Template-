@@ -1,7 +1,8 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import or_
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -12,38 +13,41 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 @router.get("/", response_model=ItemsPublic)
 def read_items(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = 0,
+    limit: int = 100,
+    search: str | None = Query(default=None, max_length=100),
 ) -> Any:
     """
-    Retrieve items.
+    Retrieve items, optionally filtering titles and descriptions by a substring.
+    Search is case-insensitive and is applied before pagination.
     """
 
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Item)
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Item).order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+    count_statement = select(func.count()).select_from(Item)
+    statement = select(Item)
+
+    if not current_user.is_superuser:
+        owner_filter = Item.owner_id == current_user.id
+        count_statement = count_statement.where(owner_filter)
+        statement = statement.where(owner_filter)
+
+    search_term = (search or "").strip()
+    if search_term:
+        search_pattern = f"%{search_term}%"
+        search_filter = or_(
+            col(Item.title).ilike(search_pattern),
+            col(Item.description).ilike(search_pattern),
         )
-        items = session.exec(statement).all()
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Item)
-            .where(Item.owner_id == current_user.id)
-        )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Item)
-            .where(Item.owner_id == current_user.id)
-            .order_by(col(Item.created_at).desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        items = session.exec(statement).all()
+        count_statement = count_statement.where(search_filter)
+        statement = statement.where(search_filter)
+
+    count = session.exec(count_statement).one()
+    statement = statement.order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+    items = session.exec(statement).all()
 
     items_public = [ItemPublic.model_validate(item) for item in items]
     return ItemsPublic(data=items_public, count=count)
-
 
 @router.get("/{id}", response_model=ItemPublic)
 def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
