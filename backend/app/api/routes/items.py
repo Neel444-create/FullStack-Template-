@@ -43,11 +43,14 @@ def read_items(
         statement = statement.where(search_filter)
 
     count = session.exec(count_statement).one()
-    statement = statement.order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+    statement = (
+        statement.order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+    )
     items = session.exec(statement).all()
 
     items_public = [ItemPublic.model_validate(item) for item in items]
     return ItemsPublic(data=items_public, count=count)
+
 
 @router.get("/{id}", response_model=ItemPublic)
 def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
