@@ -288,7 +288,8 @@ export class ItemsService {
     /**
      * Read Items
      *
-     * Retrieve items.
+     * Retrieve items, optionally filtering titles and descriptions by a substring.
+     * Search is case-insensitive and is applied before pagination.
      */
     public static readItems<ThrowOnError extends boolean = true>(options?: Options<itemsReadItemsData, ThrowOnError>) {
         return (options?.client ?? client).get<itemsReadItemsResponses, itemsReadItemsErrors, ThrowOnError>({
