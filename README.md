@@ -55,6 +55,10 @@
 
 ![API docs](img/docs.png)
 
+## Project Notes
+
+The custom item-search feature, request-flow walkthrough, design rationale, and verification commands are documented in [PROJECT_NOTES.md](./PROJECT_NOTES.md).
+
 ## How to Use It
 
 Click the **Use this template** button at the top of this page to create a new repository.

@@ -784,6 +784,10 @@ export type itemsReadItemsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Search
+         */
+        search?: string | null;
     };
     url: '/api/v1/items/';
 };

@@ -162,3 +162,49 @@ def test_delete_item_not_enough_permissions(
     assert response.status_code == 403
     content = response.json()
     assert content["detail"] == "Not enough permissions"
+
+
+def test_search_items_matches_title_case_insensitively(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    marker = "UniqueSearchTitleXYZ"
+    create_response = client.post(
+        f"{settings.API_V1_STR}/items/",
+        headers=superuser_token_headers,
+        json={"title": marker, "description": "ordinary description"},
+    )
+    assert create_response.status_code == 200
+
+    response = client.get(
+        f"{settings.API_V1_STR}/items/",
+        headers=superuser_token_headers,
+        params={"search": "uniquesearchtitlexyz"},
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["count"] == 1
+    assert len(content["data"]) == 1
+    assert content["data"][0]["title"] == marker
+
+
+def test_search_items_matches_description(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    marker = "UniqueSearchDescriptionXYZ"
+    create_response = client.post(
+        f"{settings.API_V1_STR}/items/",
+        headers=superuser_token_headers,
+        json={"title": "ordinary title", "description": marker},
+    )
+    assert create_response.status_code == 200
+
+    response = client.get(
+        f"{settings.API_V1_STR}/items/",
+        headers=superuser_token_headers,
+        params={"search": marker},
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content["count"] == 1
+    assert len(content["data"]) == 1
+    assert content["data"][0]["description"] == marker
