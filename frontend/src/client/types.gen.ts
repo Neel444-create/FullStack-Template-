@@ -784,6 +784,10 @@ export type itemsReadItemsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Case-insensitive substring search across item titles and descriptions
+         */
+        search?: string;
     };
     url: '/api/v1/items/';
 };
